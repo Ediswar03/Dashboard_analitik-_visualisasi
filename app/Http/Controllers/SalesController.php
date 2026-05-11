@@ -34,7 +34,7 @@ class SalesController extends Controller
             ->get();
 
         // 3. Analisis Penjualan Per Kategori Per Bulan (Grouped Bar Chart)
-        $penjualanKategoriBulanan = Sale::select('kategori')
+        $rawKategoriBulanan = Sale::select('kategori')
             ->selectRaw("DATE_FORMAT(tanggal, '%M') as bulan")
             ->selectRaw('MONTH(tanggal) as bulan_num')
             ->selectRaw('SUM(total) as revenue')
@@ -42,6 +42,22 @@ class SalesController extends Controller
             ->groupBy('kategori', 'bulan', 'bulan_num')
             ->orderBy('bulan_num')
             ->get();
+
+        // Aligment data untuk chart (memastikan urutan bulan konsisten di semua dataset)
+        $labelsBulan = $rawKategoriBulanan->pluck('bulan')->unique()->values();
+        $penjualanKategoriBulanan = [];
+
+        foreach ($rawKategoriBulanan->groupBy('kategori') as $kategori => $items) {
+            $data = [];
+            foreach ($labelsBulan as $bulan) {
+                $found = $items->firstWhere('bulan', $bulan);
+                $data[] = $found ? $found->revenue : 0;
+            }
+            $penjualanKategoriBulanan[] = [
+                'kategori' => $kategori,
+                'data' => $data
+            ];
+        }
 
         // 4. Analisis Proporsi Penjualan Per Kategori (Pie Chart)
         $proporsiKategori = Sale::select('kategori')
@@ -59,6 +75,7 @@ class SalesController extends Controller
             'trenPenjualan', 
             'penjualanPerProduk', 
             'penjualanKategoriBulanan', 
+            'labelsBulan',
             'proporsiKategori',
             'totalRevenue',
             'totalTransaksi',

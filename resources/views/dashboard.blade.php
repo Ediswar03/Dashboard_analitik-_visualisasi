@@ -208,13 +208,13 @@
     new Chart(document.getElementById('chartKategoriBulanan'), {
         type: 'bar',
         data: {
-            labels: @json($penjualanKategoriBulanan->pluck('bulan')->unique()->values()),
+            labels: @json($labelsBulan),
             datasets: [
-                @foreach($penjualanKategoriBulanan->groupBy('kategori') as $kategori => $items)
+                @foreach($penjualanKategoriBulanan as $item)
                 {
-                    label: '{{ $kategori }}',
-                    data: @json($items->pluck('revenue')),
-                    backgroundColor: '{{ $kategori == "Elektronik" ? "#4f46e5" : ($kategori == "Aksesoris" ? "#10b981" : "#f59e0b") }}',
+                    label: '{{ $item["kategori"] }}',
+                    data: @json($item["data"]),
+                    backgroundColor: '{{ $item["kategori"] == "Elektronik" ? "#4f46e5" : ($item["kategori"] == "Aksesoris" ? "#10b981" : "#f59e0b") }}',
                     borderRadius: 5
                 },
                 @endforeach
